@@ -6,13 +6,211 @@
 #include "errors.h"
 #include "Log.h"
 
+/*
+ * TODO
+ * Multisymbol parsing (++, --, &=, etc
+ * Make add regex, single quoted strings, double quoted strings, keywords
+ */
+
 namespace JS
 {
-    Lexer::Lexer(std::span<const char> input)
+    Lexer::Lexer(const std::span<const char> input)
     {
         m_index = 0;
         m_input = input;
+
+        m_keywords = {
+            {"function", TokenType::FUNCTION},
+            {"let", TokenType::LET},
+            {"const", TokenType::CONST},
+            {"var", TokenType::VAR},
+            {"return", TokenType::RETURN},
+            {"for", TokenType::FOR},
+            {"while", TokenType::WHILE},
+            {"continue", TokenType::CONTINUE},
+            {"break", TokenType::BREAK},
+        };
+
+        m_three_character_symbols = {
+            {"===", TokenType::EQUAL_EQUAL_EQUAL},
+            {"!==", TokenType::NOT_EQUAL_EQUAL},
+        };
+
+        m_two_character_symbols = {
+            {"+=", TokenType::PLUS_EQUALS},
+            {"-=", TokenType::MINUS_EQUALS},
+            {"*=", TokenType::MULT_EQUALS},
+            {"/=", TokenType::DIV_EQUALS},
+            {"++", TokenType::INCREMENT},
+            {"--", TokenType::DECREMENT},
+            {"%=", TokenType::MOD_EQUALS},
+            {"|=", TokenType::OR_EQUALS},
+            {"&=", TokenType::AND_EQUALS},
+            {"^=", TokenType::MOD_EQUALS},
+            {">>", TokenType::SHIFT_RIGHT},
+            {"<<", TokenType::SHIFT_LEFT},
+            {"=>", TokenType::ARROW},
+        };
+
+        m_one_character_symbols = {
+            {"+", TokenType::PLUS},
+            {"-", TokenType::MINUS},
+            {"/", TokenType::DIV},
+            {"*", TokenType::MULT},
+            {"(", TokenType::LEFT_PAREN},
+            {")", TokenType::RIGHT_PAREN},
+            {"[", TokenType::LEFT_SQUARE_BRACKET},
+            {"]", TokenType::RIGHT_SQUARE_BRACKET},
+            {"{", TokenType::LEFT_CURLY_BRACE},
+            {"}", TokenType::RIGHT_CURLY_BRACE},
+            {"%", TokenType::MOD},
+            {"^", TokenType::XOR},
+            {"&", TokenType::AND},
+            {".", TokenType::PERIOD},
+            {",", TokenType::COMMA},
+            {"=", TokenType::EQUALS},
+            {";", TokenType::SEMICOLON},
+            {":", TokenType::COLON},
+        };
     }
+
+    Token Lexer::next()
+    {
+        if(m_index >= m_input.size())
+        {
+            return {TokenType::END_OF_FILE, span_from_here()};
+        }
+        if (std::isspace(peek()))
+        {
+            if (peek() == '\n') // FIXME: handle carriage return
+            {
+                ++m_line_number;
+                m_col = 0;
+            }
+            else
+            {
+                ++m_col;
+            }
+            consume();
+            return {TokenType::WHITESPACE, span_from_here()};
+        }
+
+        switch (peek())
+        {
+        case '"':
+            {
+                consume();
+                // Consume double quoted string
+                auto string_span = consume_until('"');
+                consume();  // Consume trailing quote
+                std::string string {string_span.data(), string_span.size()};
+                return {TokenType::DOUBLE_QUOTED_STRING, string, span_from_here(string.size() + 1)};
+            }
+            break;
+        case '\'':
+            {
+                // Consume single quoted string
+                consume();
+                // Consume double quoted string
+                auto string_span = consume_until('\'');
+                consume();  // Consume trailing quote
+                std::string string {string_span.data(), string_span.size()};
+                return {TokenType::SINGLE_QUOTED_STRING, string, span_from_here(string.size() + 1)};
+            }
+            break;
+        default:
+            break;
+        }
+
+        // Progressively narrow matches
+        for (const auto& [keyword, token_type] : m_keywords)
+        {
+            if (matches(keyword))
+            {
+                // Insert keyword token
+                consume(keyword.size());
+                return {token_type, span_from_here(keyword.size())};
+            }
+        }
+
+        for (const auto& [symbol, token_type] : m_three_character_symbols)
+        {
+            if (matches(symbol))
+            {
+                // Insert keyword token
+                consume(symbol.size());
+                return {token_type, span_from_here(3)};
+            }
+        }
+
+        for (const auto& [symbol, token_type] : m_two_character_symbols)
+        {
+            if (matches(symbol))
+            {
+                // Insert keyword token
+                consume(symbol.size());
+                return {token_type, span_from_here(2)};
+            }
+        }
+
+        for (const auto& [symbol, token_type] : m_one_character_symbols)
+        {
+            if (matches(symbol))
+            {
+                // Insert keyword token
+                consume();
+                return {token_type, span_from_here(1)};
+            }
+        }
+
+        if (std::isalpha(peek()))
+        {
+            // Consume identifier
+            auto str_span = consume_while([](const char c)
+            {
+                return std::isalnum(c);
+            });
+
+            std::string str{str_span.data(), str_span.size()};
+            // Parse string against keywords
+            return {TokenType::IDENTIFIER, str, span_from_here(str.size())};
+        }
+
+        if (std::isdigit(peek()))
+        {
+            // Consume number
+            bool has_seen_period = false;
+            auto num_span = consume_while([&](const char c)
+            {
+                if (c == '.')
+                {
+                    if (has_seen_period)
+                    {
+                        throw InvalidSyntax{};
+                    }
+                    has_seen_period = true;
+                    return true;
+                }
+                return std::isdigit(c) != 0;
+            });
+
+            const std::string num_string{num_span.data(), num_span.size()};
+
+            //Janky way to find floating point
+            if (num_string.find('.') != std::string::npos)
+            {
+                const double num = std::atof(num_string.c_str());
+                return {TokenType::FLOAT, num, span_from_here(num_string.size())};
+            }
+
+            const int32_t num = std::atoi(num_string.c_str());
+            return {TokenType::INTEGER, num, span_from_here(num_string.size())};
+        }
+
+        Log::the().error("Unknown character: ", consume());
+        return {TokenType::INVALID, span_from_here()};
+    }
+
 
     std::vector<Token> Lexer::lex(const std::string& file_name)
     {
@@ -21,160 +219,16 @@ namespace JS
         m_col = 0;
 
         std::vector<Token> ret;
-
-        while(m_index < m_input.size()) {
-            if(std::isspace(peek())) {
-                if(peek() == '\n')  // FIXME: handle carriage return
-                {
-                    ++m_line_number;
-                    m_col = 0;
-                } else
-                {
-                    ++m_col;
-                }
-                consume();
-                continue;
-            }
-
-            switch(consume())
+        while(true)
+        {
+            auto tok = next();
+            ret.push_back(tok);
+            if(tok.type == TokenType::END_OF_FILE)
             {
-            case '+':
-                ret.emplace_back(TokenType::PLUS, span_from_here());
                 break;
-            case '-':
-                ret.emplace_back(TokenType::MINUS, span_from_here());
-                break;
-            case '/':
-                ret.emplace_back(TokenType::FORWARD_SLASH, span_from_here());
-                break;
-            case '$':
-                ret.emplace_back(TokenType::DOLLAR_SIGN, span_from_here());
-                break;
-            case '!':
-                ret.emplace_back(TokenType::EXCLAMATION_MARK, span_from_here());
-                break;
-            case '@':
-                ret.emplace_back(TokenType::AT_SIGN, span_from_here());
-                break;
-            case '%':
-                ret.emplace_back(TokenType::PERCENT_SIGN, span_from_here());
-                break;
-            case '^':
-                ret.emplace_back(TokenType::CARROT, span_from_here());
-                break;
-            case '&':
-                ret.emplace_back(TokenType::AMPERSAND, span_from_here());
-                break;
-            case '*':
-                ret.emplace_back(TokenType::ASTERISK, span_from_here());
-                break;
-            case '(':
-                ret.emplace_back(TokenType::LEFT_PAREN, span_from_here());
-                break;
-            case ')':
-                ret.emplace_back(TokenType::RIGHT_PAREN, span_from_here());
-                break;
-            case '[':
-                ret.emplace_back(TokenType::LEFT_SQUARE_BRACKET, span_from_here());
-                break;
-            case ']':
-                ret.emplace_back(TokenType::RIGHT_SQUARE_BRACKET, span_from_here());
-                break;
-            case '{':
-                ret.emplace_back(TokenType::LEFT_CURLY_BRACE, span_from_here());
-                break;
-            case '}':
-                ret.emplace_back(TokenType::RIGHT_CURLY_BRACE, span_from_here());
-                break;
-            case '\'':
-                ret.emplace_back(TokenType::SINGLE_QUOTE, span_from_here());
-                break;
-            case '"':
-                ret.emplace_back(TokenType::DOUBLE_QUOTE, span_from_here());
-                break;
-            case '<':
-                ret.emplace_back(TokenType::LESS_THAN, span_from_here());
-                break;
-            case '>':
-                ret.emplace_back(TokenType::GREATER_THAN, span_from_here());
-                break;
-            case ',':
-                ret.emplace_back(TokenType::COMMA, span_from_here());
-                break;
-            case '.':  // TODO: Check if floating point
-                ret.emplace_back(TokenType::PERIOD, span_from_here());
-                break;
-            case '?':
-                ret.emplace_back(TokenType::QUESTION_MARK, span_from_here());
-                break;
-            case ';':
-                ret.emplace_back(TokenType::SEMICOLON, span_from_here());
-                break;
-            case ':':
-                ret.emplace_back(TokenType::COLON, span_from_here());
-                break;
-            case '=':
-                ret.emplace_back(TokenType::EQUALS, span_from_here());
-                break;
-            default:
-                {
-                    rewind();
-                    char curr_char = peek();
-                    if(std::isalpha(curr_char))
-                    {
-                        // FIXME: REPLACE THIS
-                        // At the " character handler, read until " and insert a string, dont do this
-                        auto str_span = consume_while([](char c)
-                        {
-                            return std::isalnum(c);
-                        });
-
-                        std::string str{str_span.data(), str_span.size()};
-                        ret.emplace_back(TokenType::STRING, str, span_from_here(str.size()));
-                    } else if(std::isdigit(curr_char))
-                    {
-                        bool has_seen_period = false;
-                        auto num_span = consume_while([&](const char c)
-                        {
-                            if(c == '.')
-                            {
-                                if(has_seen_period)
-                                {
-                                    throw InvalidSyntax{};
-                                }
-                                has_seen_period = true;
-                                return true;
-                            }
-                            return std::isdigit(c) != 0;
-                        });
-
-                        const std::string num_string{num_span.data(), num_span.size()};
-
-                        //Janky way to find floating point
-                        if(num_string.find('.') != std::string::npos)
-                        {
-                            const double num = std::atof(num_string.c_str());
-                            ret.emplace_back(TokenType::FLOAT, num, span_from_here(num_string.size()));
-                        } else
-                        {
-                            const int32_t num = std::atoi(num_string.c_str());
-                            ret.emplace_back(TokenType::INTEGER, num, span_from_here(num_string.size()));
-                        }
-
-                    } else
-                    {
-                        Log::the().warn("Unknown char: ", curr_char);
-                        consume();
-                    }
-
-                    break;
-                }
             }
-
-            ++m_col;
         }
 
-        ret.emplace_back(TokenType::END_OF_FILE, span_from_here());
         return ret;
     }
 
@@ -182,9 +236,9 @@ namespace JS
     {
         size_t len = 0;
 
-        while(true)
+        while (true)
         {
-            if(peek(len) == stop)
+            if (peek(len) == stop)
             {
                 break;
             }
@@ -195,6 +249,13 @@ namespace JS
         const std::span<const char> span{m_input.begin() + static_cast<long long>(m_index), len};
         m_index += len;
         return span;
+    }
+
+    std::span<const char> Lexer::consume(const size_t n)
+    {
+        const std::span<const char> ret {m_input.begin() + static_cast<long long>(m_index), n};
+        m_index += n;
+        return ret;
     }
 
     char Lexer::consume()
@@ -224,14 +285,34 @@ namespace JS
         return m_input[m_index + off];
     }
 
+    bool Lexer::matches(const std::string& pattern) const
+    {
+        if (m_index + pattern.size() >= m_input.size())
+        {
+            return false;
+        }
+
+        size_t i = 0;
+        for (auto& c : pattern)
+        {
+            if (peek(i) != c)
+            {
+                return false;
+            }
+            ++i;
+        }
+
+        return true;
+    }
+
     template <typename P>
     std::span<const char> Lexer::consume_while(P predicate)
     {
         size_t len = 0;
 
-        while(true)
+        while (true)
         {
-            if(!predicate(peek(len)))
+            if (!predicate(peek(len)))
             {
                 break;
             }
