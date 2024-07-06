@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <algorithm>
 
 #include "errors.h"
 #include "Log.h"
@@ -218,10 +219,19 @@ namespace JS
         m_line_number = 0;
         m_col = 0;
 
+        std::vector skipped_types {
+            TokenType::INVALID, TokenType::WHITESPACE
+        };
+
         std::vector<Token> ret;
         while(true)
         {
             auto tok = next();
+            if(std::find(skipped_types.begin(), skipped_types.end(), tok.type) != skipped_types.end())
+            {
+                // Skip
+                continue;
+            }
             ret.push_back(tok);
             if(tok.type == TokenType::END_OF_FILE)
             {

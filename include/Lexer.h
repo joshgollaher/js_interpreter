@@ -184,7 +184,7 @@ namespace JS {
 
             std::ostringstream data_string;
             data_string << "(";
-
+            bool has_extra_data = true;
             switch(type)
             {
             case TokenType::IDENTIFIER:
@@ -199,12 +199,17 @@ namespace JS {
                 data_string << unwrap<double>();
                 break;
             default:
+                has_extra_data = false;
                 break;
             }
             data_string << ") at " << span.to_string();
 
             std::ostringstream output;
-            output << token_names.at(type) << data_string.str();
+            output << token_names.at(type);
+            if(has_extra_data)
+            {
+                output << data_string.str();
+            }
             return output.str();
         }
 
