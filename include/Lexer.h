@@ -78,8 +78,7 @@ namespace JS
         DOUBLE_QUOTED_STRING,
 
         IDENTIFIER,
-        INTEGER,
-        FLOAT,
+        NUMBER,
 
         LET,
         CONST,
@@ -97,7 +96,7 @@ namespace JS
         WHITESPACE
     };
 
-    using TokenData = std::variant<std::monostate, std::string, int32_t, double>;
+    using TokenData = std::variant<std::monostate, std::string, double>;
 
     struct Token
     {
@@ -166,8 +165,7 @@ namespace JS
                 {TokenType::SINGLE_QUOTED_STRING, "Single quoted string"},
                 {TokenType::DOUBLE_QUOTED_STRING, "Double quoted string"},
                 {TokenType::IDENTIFIER, "Identifier"},
-                {TokenType::INTEGER, "Integer"},
-                {TokenType::FLOAT, "Float"},
+                {TokenType::NUMBER, "Number"},
                 {TokenType::LET, "let"},
                 {TokenType::VAR, "var"},
                 {TokenType::CONST, "const"},
@@ -199,10 +197,7 @@ namespace JS
             case TokenType::DOUBLE_QUOTED_STRING:
                 data_string << unwrap<std::string>();
                 break;
-            case TokenType::INTEGER:
-                data_string << unwrap<int32_t>();
-                break;
-            case TokenType::FLOAT:
+            case TokenType::NUMBER:
                 data_string << unwrap<double>();
                 break;
             default:

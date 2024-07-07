@@ -2,6 +2,9 @@
 #define AST_H
 #include <memory>
 #include <string>
+#include <vector>
+
+#include "Value.h"
 
 namespace JS
 {
@@ -31,12 +34,21 @@ namespace JS
         class Expression : public Node
         {
         public:
-
+            virtual std::shared_ptr<Value> value() = 0;
         };
 
         class FunctionCall : public Expression
         {
+        public:
 
+            FunctionCall(const std::string& name, const std::vector<Value>& arguments) : m_name(name), m_arguments(arguments) {} // NOLINT(*-pass-by-value)
+
+            std::string to_string() override;
+
+        private:
+            // TODO: switch to a flyweight string
+            std::string m_name;
+            std::vector<Value> m_arguments;
         };
 
         class BinaryExpression : public Expression
@@ -59,6 +71,8 @@ namespace JS
                 NOT_EQUAL,
                 NOT_EQUAL_EQUAL
             };
+
+            BinaryExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, Op op) : m_left(std::move(left)), m_right(std::move(right)), m_op(op) {}
 
             [[nodiscard]] const Expression& left() const { return *m_left; }
             [[nodiscard]] const Expression& right() const { return *m_right; }

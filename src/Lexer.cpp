@@ -192,16 +192,8 @@ namespace JS
             });
 
             const std::string num_string{num_span.data(), num_span.size()};
-
-            //Janky way to find floating point
-            if (num_string.find('.') != std::string::npos)
-            {
-                const double num = std::atof(num_string.c_str());
-                return {TokenType::FLOAT, num, span_from_here(num_string.size())};
-            }
-
-            const int32_t num = std::atoi(num_string.c_str());
-            return {TokenType::INTEGER, num, span_from_here(num_string.size())};
+            const double num = std::stod(num_string);
+            return {TokenType::NUMBER, num, span_from_here(num_string.size())};
         }
 
         Log::the().error("Unknown character: ", consume());
@@ -215,6 +207,7 @@ namespace JS
         m_line_number = 0;
         m_col = 0;
 
+        // TODO: automatic semicolon insertion
         std::vector skipped_types{
             TokenType::INVALID, TokenType::WHITESPACE
         };
