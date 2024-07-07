@@ -7,12 +7,6 @@
 #include "errors.h"
 #include "Log.h"
 
-/*
- * TODO
- * Multisymbol parsing (++, --, &=, etc
- * Make add regex, single quoted strings, double quoted strings, keywords
- */
-
 namespace JS
 {
     Lexer::Lexer(const std::span<const char> input)
@@ -53,6 +47,7 @@ namespace JS
             {"=>", TokenType::ARROW},
         };
 
+        // TODO: handle negative numbers
         m_one_character_symbols = {
             {"+", TokenType::PLUS},
             {"-", TokenType::MINUS},
@@ -77,7 +72,7 @@ namespace JS
 
     Token Lexer::next()
     {
-        if(m_index >= m_input.size())
+        if (m_index >= m_input.size())
         {
             return {TokenType::END_OF_FILE, span_from_here()};
         }
@@ -103,8 +98,8 @@ namespace JS
                 consume();
                 // Consume double quoted string
                 auto string_span = consume_until('"');
-                consume();  // Consume trailing quote
-                std::string string {string_span.data(), string_span.size()};
+                consume(); // Consume trailing quote
+                std::string string{string_span.data(), string_span.size()};
                 return {TokenType::DOUBLE_QUOTED_STRING, string, span_from_here(string.size() + 1)};
             }
             break;
@@ -114,19 +109,21 @@ namespace JS
                 consume();
                 // Consume double quoted string
                 auto string_span = consume_until('\'');
-                consume();  // Consume trailing quote
-                std::string string {string_span.data(), string_span.size()};
+                consume(); // Consume trailing quote
+                std::string string{string_span.data(), string_span.size()};
                 return {TokenType::SINGLE_QUOTED_STRING, string, span_from_here(string.size() + 1)};
             }
-            break;
         default:
             break;
         }
 
         // Progressively narrow matches
+
+        //FIXME: what if an identifier starts with a keyword
         for (const auto& [keyword, token_type] : m_keywords)
         {
-            if (matches(keyword))
+            // Handle cases where identifier starts with keyword
+            if (matches(keyword) && !std::isalpha(peek(keyword.size())))
             {
                 // Insert keyword token
                 consume(keyword.size());
@@ -219,21 +216,21 @@ namespace JS
         m_line_number = 0;
         m_col = 0;
 
-        std::vector skipped_types {
+        std::vector skipped_types{
             TokenType::INVALID, TokenType::WHITESPACE
         };
 
         std::vector<Token> ret;
-        while(true)
+        while (true)
         {
             auto tok = next();
-            if(std::find(skipped_types.begin(), skipped_types.end(), tok.type) != skipped_types.end())
+            if (std::find(skipped_types.begin(), skipped_types.end(), tok.type) != skipped_types.end())
             {
                 // Skip
                 continue;
             }
             ret.push_back(tok);
-            if(tok.type == TokenType::END_OF_FILE)
+            if (tok.type == TokenType::END_OF_FILE)
             {
                 break;
             }
@@ -263,7 +260,7 @@ namespace JS
 
     std::span<const char> Lexer::consume(const size_t n)
     {
-        const std::span<const char> ret {m_input.begin() + static_cast<long long>(m_index), n};
+        const std::span<const char> ret{m_input.begin() + static_cast<long long>(m_index), n};
         m_index += n;
         return ret;
     }

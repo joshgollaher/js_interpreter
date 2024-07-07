@@ -15,9 +15,10 @@
 #include "Log.h"
 #include "Span.h"
 
-namespace JS {
-
-    enum class TokenType: int {
+namespace JS
+{
+    enum class TokenType: int
+    {
         EXCLAMATION_MARK,
         QUESTION_MARK,
 
@@ -105,8 +106,14 @@ namespace JS {
         Span span;
 
         // ReSharper disable once CppNonExplicitConvertingConstructor
-        Token(const TokenType _type, TokenData  _data, Span _span) : type(_type), data(std::move(_data)), span(std::move(_span)) {}
-        Token(const TokenType _type, Span _span) : type(_type), data(std::monostate{}), span(std::move(_span)) {} // NOLINT(*-explicit-constructor)
+        Token(const TokenType _type, TokenData _data, Span _span) : type(_type), data(std::move(_data)),
+                                                                    span(std::move(_span))
+        {
+        }
+
+        Token(const TokenType _type, Span _span) : type(_type), data(std::monostate{}), span(std::move(_span))
+        {
+        } // NOLINT(*-explicit-constructor)
 
         [[nodiscard]] std::string to_string() const
         {
@@ -176,7 +183,7 @@ namespace JS {
                 {TokenType::WHITESPACE, "\\w"}
             };
 
-            if(!token_names.contains(type))
+            if (!token_names.contains(type))
             {
                 Log::the().critical("No name for TokenType ", static_cast<int>(type));
                 return "";
@@ -185,7 +192,7 @@ namespace JS {
             std::ostringstream data_string;
             data_string << "(";
             bool has_extra_data = true;
-            switch(type)
+            switch (type)
             {
             case TokenType::IDENTIFIER:
             case TokenType::SINGLE_QUOTED_STRING:
@@ -206,14 +213,14 @@ namespace JS {
 
             std::ostringstream output;
             output << token_names.at(type);
-            if(has_extra_data)
+            if (has_extra_data)
             {
                 output << data_string.str();
             }
             return output.str();
         }
 
-        template<typename T>
+        template <typename T>
         T unwrap() const
         {
             assert(std::holds_alternative<T>(data));
@@ -221,16 +228,15 @@ namespace JS {
         }
     };
 
-    class Lexer {
+    class Lexer
+    {
     public:
-
         explicit Lexer(std::span<const char>);
         std::vector<Token> lex(const std::string& file_name);
         Token next();
 
     private:
-
-        template<typename P>
+        template <typename P>
         std::span<const char> consume_while(P predicate);
 
         std::span<const char> consume_until(char c);
@@ -257,7 +263,6 @@ namespace JS {
         size_t m_col{0};
         size_t m_line_number{0};
         std::string m_filename{};
-
     };
 }
 
