@@ -119,7 +119,6 @@ namespace JS
 
         // Progressively narrow matches
 
-        //FIXME: what if an identifier starts with a keyword
         for (const auto& [keyword, token_type] : m_keywords)
         {
             // Handle cases where identifier starts with keyword

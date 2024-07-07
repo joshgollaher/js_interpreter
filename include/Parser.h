@@ -14,7 +14,9 @@ namespace JS {
 
     private:
         std::vector<Token> m_tokens;
+        size_t m_index{0};
 
+        AST::Node* parse_statement();
     };
 }
 

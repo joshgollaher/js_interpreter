@@ -221,7 +221,7 @@ namespace JS
         }
 
         template <typename T>
-        T unwrap() const
+        [[nodiscard]] T unwrap() const
         {
             assert(std::holds_alternative<T>(data));
             return std::get<T>(data);

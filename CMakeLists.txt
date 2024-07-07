@@ -17,6 +17,7 @@ set(SOURCES
     src/Log.cpp
     include/AST.h
     include/Span.h
+        include/Value.h
 )
 
 add_executable(js ${SOURCES})
