@@ -37,10 +37,23 @@ namespace JS {
             return m_tokens[m_index];
         }
 
-        std::shared_ptr<AST::Node> parse_statement();
-        std::shared_ptr<AST::Node> parse_function();
+        [[nodiscard]] bool match(const std::vector<TokenType>& types) const
+        {
+
+        }
+
+        std::shared_ptr<AST::Node> parse_program();
         std::shared_ptr<AST::Node> parse_expression();
+        std::shared_ptr<AST::Node> parse_function_call();
+        std::shared_ptr<AST::Node> parse_binary_expression();
+        std::shared_ptr<AST::Node> parse_literal();
+        std::shared_ptr<AST::Node> parse_variable_assignment();
         std::shared_ptr<AST::Node> parse_block();
+        std::shared_ptr<AST::Node> parse_function();
+        std::shared_ptr<AST::Node> parse_variable_declaration();
+        std::shared_ptr<AST::Node> parse_if_statement();
+        std::shared_ptr<AST::Node> parse_while_statement();
+        std::shared_ptr<AST::Node> parse_for_statement();
     };
 }
 
