@@ -5,3 +5,4 @@ var vart;
 function bar() {
     return 0;
 }
+

@@ -16,6 +16,7 @@ namespace JS
 
         m_keywords = {
             {"function", TokenType::FUNCTION},
+            {"if", TokenType::IF},
             {"let", TokenType::LET},
             {"const", TokenType::CONST},
             {"var", TokenType::VAR},

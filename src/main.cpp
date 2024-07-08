@@ -33,13 +33,16 @@ int main(const int argc, char **argv)
     JS::Lexer lexer(file_string);
     auto tokens = lexer.lex("hello_world.js");
 
-    for(auto& token : tokens)
-    {
-        std::cout << token.to_string() << std::endl;
-    }
+    // for(auto& token : tokens)
+    // {
+    //     std::cout << token.to_string() << std::endl;
+    // }
 
     JS::Parser parser(tokens);
-    JS::AST ast = parser.parse();
+    const JS::AST ast = parser.parse();
+
+    const auto program = ast.program();
+    std::cout << "Parsed program: " << program->to_string() << std::endl;;
 
     return EXIT_SUCCESS;
 }

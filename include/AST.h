@@ -309,6 +309,8 @@ namespace JS
         AST(const std::shared_ptr<Program>& program, const std::shared_ptr<Scope>& global_scope) : m_program(program), m_global_scope(global_scope) {}
         void execute();
 
+        [[nodiscard]] std::shared_ptr<Program> program() const { return m_program; }
+
     private:
         std::shared_ptr<Program> m_program;
         std::shared_ptr<Scope> m_global_scope;

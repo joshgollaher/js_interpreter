@@ -37,23 +37,39 @@ namespace JS {
             return m_tokens[m_index];
         }
 
-        [[nodiscard]] bool match(const std::vector<TokenType>& types) const
+        [[nodiscard]] Token peek(size_t off) const
         {
-
+            return m_tokens[m_index + off];
         }
 
-        std::shared_ptr<AST::Node> parse_program();
-        std::shared_ptr<AST::Node> parse_expression();
-        std::shared_ptr<AST::Node> parse_function_call();
-        std::shared_ptr<AST::Node> parse_binary_expression();
-        std::shared_ptr<AST::Node> parse_literal();
-        std::shared_ptr<AST::Node> parse_variable_assignment();
-        std::shared_ptr<AST::Node> parse_block();
-        std::shared_ptr<AST::Node> parse_function();
-        std::shared_ptr<AST::Node> parse_variable_declaration();
-        std::shared_ptr<AST::Node> parse_if_statement();
-        std::shared_ptr<AST::Node> parse_while_statement();
-        std::shared_ptr<AST::Node> parse_for_statement();
+        [[nodiscard]] bool match(const std::vector<TokenType>& types) const
+        {
+            size_t i = 0;
+            for(const auto& type : types)
+            {
+                if(peek(i).type != type)
+                {
+                    return false;
+                }
+                ++i;
+            }
+
+            return true;
+        }
+
+        [[nodiscard]] std::vector<std::shared_ptr<AST::Node>> parse_block(const std::vector<TokenType>& stoppers) const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_expression() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_function_call() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_binary_expression() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_literal() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_variable_assignment() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_block() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_function() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_variable_declaration() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_if_statement() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_while_statement() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_for_statement() const;
+        [[nodiscard]] std::shared_ptr<AST::Node> parse_return_statement() const;
     };
 }
 

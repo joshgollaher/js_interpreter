@@ -87,6 +87,7 @@ namespace JS
         RETURN,
         FOR,
         WHILE,
+        IF,
         CONTINUE,
         BREAK,
 
@@ -172,6 +173,7 @@ namespace JS
                 {TokenType::FUNCTION, "function"},
                 {TokenType::RETURN, "return"},
                 {TokenType::FOR, "for"},
+                {TokenType::IF, "if"},
                 {TokenType::WHILE, "while"},
                 {TokenType::CONTINUE, "continue"},
                 {TokenType::BREAK, "break"},
