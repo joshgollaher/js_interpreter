@@ -73,7 +73,7 @@ namespace JS
         class FunctionCall final : public Expression
         {
         public:
-            FunctionCall(std::string name, const std::vector<std::shared_ptr<Value>>& arguments) : m_name(std::move(name)),
+            FunctionCall(std::string name, const std::vector<std::shared_ptr<Parameter>>& arguments) : m_name(std::move(name)),
                 m_arguments(arguments)
             {
             } // NOLINT(*-pass-by-value)
@@ -97,7 +97,7 @@ namespace JS
         private:
             // TODO: switch to a flyweight string
             std::string m_name;
-            std::vector<std::shared_ptr<Value>> m_arguments;
+            std::vector<std::shared_ptr<Parameter>> m_arguments;
         };
 
         class BinaryExpression final : public Expression
@@ -159,6 +159,22 @@ namespace JS
 
         private:
             std::shared_ptr<Value> m_value;
+        };
+
+        class VariableExpression final : public Expression
+        {
+        public:
+            explicit VariableExpression(const std::string& name) : m_name(name) {}
+
+            [[nodiscard]] std::shared_ptr<Value> evaluate(std::shared_ptr<Scope> scope) const override { not_implemented(); }
+
+            std::string to_string() override
+            {
+                return std::format("Variable [name={}]", m_name);
+            }
+
+        private:
+            std::string m_name;
         };
 
         class VariableAssignment final : public Expression
@@ -335,6 +351,25 @@ namespace JS
             {
                 not_implemented();
             }
+        };
+
+        class FunctionCallStatement final : public Statement
+        {
+        public:
+
+            FunctionCallStatement(const std::shared_ptr<FunctionCall>& function_call) : m_function_call(function_call) {}
+
+            std::string to_string() override
+            {
+                return std::format("FunctionCallStatement [function_call={}]", m_function_call->to_string());
+            }
+
+            void execute(std::shared_ptr<Scope> scope) const override
+            {
+                not_implemented();
+            }
+        private:
+            std::shared_ptr<FunctionCall> m_function_call;
         };
 
         //TODO: missing switch statement, import statement, class declarations

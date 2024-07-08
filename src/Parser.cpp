@@ -48,8 +48,22 @@ namespace JS
     }
     std::shared_ptr<AST::FunctionCall> Parser::parse_function_call()
     {
-        not_implemented();
+        auto name = consume();
+        assert(name.type == TokenType::IDENTIFIER);
+        consume(TokenType::LEFT_PAREN);
+        auto params = parse_parameters();
+        consume(TokenType::RIGHT_PAREN);
+        consume_semicolon_if_exists();
+        return std::make_shared<AST::FunctionCall>(name.unwrap<std::string>(), params);
     }
+
+    std::shared_ptr<AST::FunctionCallStatement> Parser::parse_function_call_statement()
+    {
+        auto function_call = parse_function_call();
+        consume_semicolon_if_exists();
+        return std::make_shared<AST::FunctionCallStatement>(function_call);
+    }
+
 
     std::shared_ptr<AST::FunctionDeclaration> Parser::parse_function_declaration()
     {
@@ -63,7 +77,7 @@ namespace JS
         auto body = parse_block({TokenType::RIGHT_CURLY_BRACE});
         consume(TokenType::RIGHT_CURLY_BRACE);
 
-        return std::make_shared<AST::FunctionDeclaration>(identifier.unwrap<std::string>(), params, std::make_shared<AST::BlockStatement>());
+        return std::make_shared<AST::FunctionDeclaration>(identifier.unwrap<std::string>(), params, std::make_shared<AST::BlockStatement>(body));
     }
     std::shared_ptr<AST::BinaryExpression> Parser::parse_binary_expression()
     {

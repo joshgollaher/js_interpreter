@@ -17,6 +17,14 @@ namespace JS {
         std::vector<Token> m_tokens;
         size_t m_index{0};
 
+        void consume_semicolon_if_exists()
+        {
+            if(peek().type == TokenType::SEMICOLON)
+            {
+                consume();
+            }
+        }
+
         Token consume()
         {
             return m_tokens[m_index++];
@@ -67,6 +75,7 @@ namespace JS {
         [[nodiscard]] std::shared_ptr<AST::VariableAssignment> parse_variable_assignment();
         [[nodiscard]] std::shared_ptr<AST::FunctionDeclaration> parse_function_declaration();
         [[nodiscard]] std::shared_ptr<AST::VariableDeclaration> parse_variable_declaration();
+        [[nodiscard]] std::shared_ptr<AST::FunctionCallStatement> parse_function_call_statement();
         [[nodiscard]] std::shared_ptr<AST::IfStatement> parse_if_statement();
         [[nodiscard]] std::shared_ptr<AST::WhileStatement> parse_while_statement();
         [[nodiscard]] std::shared_ptr<AST::ForStatement> parse_for_statement();
