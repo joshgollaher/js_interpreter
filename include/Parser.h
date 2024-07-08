@@ -1,5 +1,6 @@
 #ifndef PARSER_H
 #define PARSER_H
+
 #include "AST.h"
 #include "Lexer.h"
 
@@ -37,7 +38,7 @@ namespace JS {
             return m_tokens[m_index];
         }
 
-        [[nodiscard]] Token peek(size_t off) const
+        [[nodiscard]] Token peek(const size_t off) const
         {
             return m_tokens[m_index + off];
         }
@@ -57,19 +58,19 @@ namespace JS {
             return true;
         }
 
-        [[nodiscard]] std::vector<std::shared_ptr<AST::Node>> parse_block(const std::vector<TokenType>& stoppers) const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_expression() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_function_call() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_binary_expression() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_literal() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_variable_assignment() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_block() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_function() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_variable_declaration() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_if_statement() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_while_statement() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_for_statement() const;
-        [[nodiscard]] std::shared_ptr<AST::Node> parse_return_statement() const;
+        [[nodiscard]] std::vector<std::shared_ptr<AST::Statement>> parse_block(const std::vector<TokenType>& stoppers);
+        [[nodiscard]] std::vector<std::shared_ptr<AST::Parameter>> parse_parameters();
+        [[nodiscard]] std::shared_ptr<AST::Expression> parse_expression();
+        [[nodiscard]] std::shared_ptr<AST::FunctionCall> parse_function_call();
+        [[nodiscard]] std::shared_ptr<AST::BinaryExpression> parse_binary_expression();
+        [[nodiscard]] std::shared_ptr<AST::Literal> parse_literal();
+        [[nodiscard]] std::shared_ptr<AST::VariableAssignment> parse_variable_assignment();
+        [[nodiscard]] std::shared_ptr<AST::FunctionDeclaration> parse_function_declaration();
+        [[nodiscard]] std::shared_ptr<AST::VariableDeclaration> parse_variable_declaration();
+        [[nodiscard]] std::shared_ptr<AST::IfStatement> parse_if_statement();
+        [[nodiscard]] std::shared_ptr<AST::WhileStatement> parse_while_statement();
+        [[nodiscard]] std::shared_ptr<AST::ForStatement> parse_for_statement();
+        [[nodiscard]] std::shared_ptr<AST::ReturnStatement> parse_return_statement();
     };
 }
 

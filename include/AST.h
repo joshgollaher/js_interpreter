@@ -27,6 +27,20 @@ namespace JS
             virtual std::string to_string() = 0;
         };
 
+        class Parameter final : public Node
+        {
+        public:
+            explicit Parameter(const std::string& name) : m_name(name) {}
+
+            std::string to_string() override
+            {
+                return std::format("Parameter [name={}]", m_name);
+            }
+
+        private:
+            std::string m_name;
+        };
+
         class Program final : public Node
         {
         public:
@@ -176,7 +190,13 @@ namespace JS
         class BlockStatement final : public Statement
         {
         public:
-            void add_statement(const std::shared_ptr<Node>& statement)
+
+            explicit BlockStatement(const std::vector<std::shared_ptr<Statement>>& statements)
+            {
+                m_statements = std::vector(statements);
+            }
+
+            void add_statement(const std::shared_ptr<Statement>& statement)
             {
                 m_statements.push_back(statement);
             }
@@ -199,18 +219,18 @@ namespace JS
             }
 
         private:
-            std::vector<std::shared_ptr<Node>> m_statements;
+            std::vector<std::shared_ptr<Statement>> m_statements;
         };
 
         class FunctionDeclaration final : public Statement
         {
         public:
 
-            FunctionDeclaration(std::string name, const std::vector<std::string> arguments, std::shared_ptr<BlockStatement> body) : m_name(std::move(name)), m_arguments(arguments), m_body(body) {}
+            FunctionDeclaration(std::string name, const std::vector<std::shared_ptr<Parameter>>& parameters, std::shared_ptr<BlockStatement> body) : m_name(std::move(name)), m_parameters(parameters), m_body(body) {}
 
             std::string to_string() override
             {
-                return std::format("FunctionDeclaration[name={}, arg_count={}, body={}]", m_name, m_arguments.size(), m_body->to_string());
+                return std::format("FunctionDeclaration[name={}, arg_count={}, body={}]", m_name, m_parameters.size(), m_body->to_string());
             }
 
             void execute(std::shared_ptr<Scope> scope) const override
@@ -220,7 +240,7 @@ namespace JS
 
         private:
             std::string m_name;
-            std::vector<std::string> m_arguments;
+            std::vector<std::shared_ptr<Parameter>> m_parameters;
             std::shared_ptr<BlockStatement> m_body;
         };
 
@@ -302,6 +322,19 @@ namespace JS
         private:
             std::shared_ptr<Expression> m_condition;
             std::shared_ptr<BlockStatement> m_body;
+        };
+
+        class ReturnStatement final : public Statement
+        {
+        public:
+            std::string to_string() override
+            {
+                return "ReturnStatement";
+            }
+            void execute(std::shared_ptr<Scope> scope) const override
+            {
+                not_implemented();
+            }
         };
 
         //TODO: missing switch statement, import statement, class declarations

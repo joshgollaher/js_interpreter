@@ -10,7 +10,6 @@ set(SOURCES
     src/AST.cpp
     src/Lexer.cpp
     src/Parser.cpp
-    include/Parser.h
     include/Lexer.h
     include/errors.h
     include/Log.h
@@ -20,6 +19,7 @@ set(SOURCES
     include/Value.h
     include/Scope.h
     include/Forward.h
+    include/Parser.h
 )
 
 add_executable(js ${SOURCES})
