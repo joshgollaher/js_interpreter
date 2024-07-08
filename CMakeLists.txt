@@ -18,6 +18,8 @@ set(SOURCES
     include/AST.h
     include/Span.h
         include/Value.h
+        include/Scope.h
+        include/Forward.h
 )
 
 add_executable(js ${SOURCES})

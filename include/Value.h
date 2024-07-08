@@ -73,6 +73,11 @@ namespace JS
             return std::get<T>(m_data);
         }
 
+        std::string to_string() const
+        {
+            return "";
+        }
+
         Type type() const { return m_type; }
 
     private:
